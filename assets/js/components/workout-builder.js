@@ -5,28 +5,40 @@ import { esc } from "../utils/html.js";
 import { modal, closeModal } from "./modal.js";
 import { toast } from "./toast.js";
 
+function normalizeSearch(value) {
+  return String(value || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
+}
+
+function exerciseOptions(exercises, selected = "") {
+  return exercises.map((exercise) => `
+    <option value="${exercise.id}" ${exercise.id == selected ? "selected" : ""}>
+      ${esc(exercise.name)}
+    </option>`).join("");
+}
+
 export function builderRow(item = {}) {
   return `
     <div class="builder-row">
-      <div class="field">
+      <div class="field exercise-picker">
         <label>Exercice</label>
+
+        <input
+          class="input exercise-picker-search"
+          type="search"
+          placeholder="Rechercher un exercice…"
+          autocomplete="off"
+          aria-label="Rechercher dans les exercices"
+        >
 
         <select class="select" name="exercise_id">
           <option value="">Choisir</option>
-
-          ${state.exercises
-            .map(
-              (exercise) => `
-                <option
-                  value="${exercise.id}"
-                  ${exercise.id == item.exercise_id ? "selected" : ""}
-                >
-                  ${esc(exercise.name)}
-                </option>
-              `,
-            )
-            .join("")}
+          ${exerciseOptions(state.exercises, item.exercise_id)}
         </select>
+        <small class="muted exercise-picker-count">${state.exercises.length} disponibles</small>
       </div>
 
       <div class="field">
@@ -168,19 +180,40 @@ export function workoutModal(
     throw new Error("Le formulaire de séance est introuvable.");
   }
 
-  const bindRemove = () => {
-    builder.querySelectorAll(".remove-builder").forEach((button) => {
+  const bindRows = () => {
+    builder.querySelectorAll(".builder-row").forEach((row) => {
+      const button = row.querySelector(".remove-builder");
       button.onclick = () => {
-        button.closest(".builder-row")?.remove();
+        row.remove();
+      };
+
+      const search = row.querySelector(".exercise-picker-search");
+      const select = row.querySelector('[name="exercise_id"]');
+      const count = row.querySelector(".exercise-picker-count");
+
+      search.oninput = () => {
+        const query = normalizeSearch(search.value);
+        const selected = select.value;
+        const matches = state.exercises.filter((exercise) =>
+          normalizeSearch(`${exercise.name} ${exercise.primary_muscle_group || ""} ${exercise.equipment || ""}`).includes(query),
+        );
+        const selectedExercise = state.exercises.find((exercise) => exercise.id == selected);
+        const choices = selectedExercise && !matches.some((exercise) => exercise.id == selected)
+          ? [selectedExercise, ...matches]
+          : matches;
+
+        select.innerHTML = `<option value="">${choices.length ? "Choisir" : "Aucun résultat"}</option>${exerciseOptions(choices, selected)}`;
+        select.value = selected;
+        count.textContent = `${matches.length} disponible${matches.length !== 1 ? "s" : ""}`;
       };
     });
   };
 
-  bindRemove();
+  bindRows();
 
   document.querySelector("#add-builder").onclick = () => {
     builder.insertAdjacentHTML("beforeend", builderRow());
-    bindRemove();
+    bindRows();
   };
 
   document.querySelector("#save-workout").onclick = async () => {

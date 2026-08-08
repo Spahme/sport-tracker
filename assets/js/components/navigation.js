@@ -10,10 +10,8 @@ export const navigationItems = [
   ["tracking", "＋", "Suivi"],
 ];
 
-function navigationHtml(mobile = false) {
-  const items = mobile
-    ? navigationItems.slice(0, 5)
-    : navigationItems;
+function navigationHtml() {
+  const items = navigationItems;
 
   return items
     .map(
@@ -33,7 +31,7 @@ function navigationHtml(mobile = false) {
 
 export function renderNavigation(onNavigate) {
   document.querySelector("#desktop-nav").innerHTML = navigationHtml();
-  document.querySelector("#mobile-nav").innerHTML = navigationHtml(true);
+  document.querySelector("#mobile-nav").innerHTML = navigationHtml();
 
   document.querySelectorAll("[data-route]").forEach((button) => {
     button.onclick = () => {

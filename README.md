@@ -89,6 +89,8 @@ Pour une base installée avant l’ajout des séances imprévues :
 2. importer `database/migrations/2026-08-08-unplanned-sessions.sql` avec phpMyAdmin ;
 3. transférer les nouveaux fichiers.
 
+L’API tente aussi d’ajouter automatiquement la colonne manquante au premier démarrage de séance. Si le compte MySQL OVH ne possède pas le droit `ALTER`, elle renvoie un message demandant d’importer manuellement la migration ci-dessus.
+
 Ne lance pas cette migration sur une base créée avec la version actuelle de `database/schema.sql` : la colonne est déjà présente.
 
 ## Structure

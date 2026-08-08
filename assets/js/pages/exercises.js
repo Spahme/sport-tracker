@@ -8,6 +8,14 @@ import { exerciseTrackingModal } from "../components/exercise-tracking-modal.js"
 
 const app = document.querySelector("#app");
 
+function normalizeSearch(value) {
+  return String(value || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
+}
+
 export async function renderExercises(context) {
   setTitle("Exercices", "Bibliothèque");
   loading();
@@ -33,6 +41,24 @@ export async function renderExercises(context) {
       </button>
     </div>
 
+    ${state.exercises.length ? `
+      <div class="exercise-search-bar">
+        <label class="field" for="exercise-search">
+          <span>Rechercher un exercice</span>
+          <input
+            class="input"
+            id="exercise-search"
+            type="search"
+            placeholder="Nom, groupe musculaire ou matériel…"
+            autocomplete="off"
+          >
+        </label>
+        <div class="muted exercise-search-count" id="exercise-search-count" aria-live="polite">
+          ${state.exercises.length} résultat${state.exercises.length !== 1 ? "s" : ""}
+        </div>
+      </div>
+    ` : ""}
+
     ${
       state.exercises.length
         ? `
@@ -40,7 +66,11 @@ export async function renderExercises(context) {
             ${state.exercises
               .map(
                 (exercise) => `
-                  <div class="list-item">
+                  <div
+                    class="list-item"
+                    data-exercise-item
+                    data-search="${esc(normalizeSearch(`${exercise.name} ${exercise.primary_muscle_group || ""} ${exercise.equipment || ""}`))}"
+                  >
                     <div class="list-main">
                       <div class="list-title">
                         ${esc(exercise.name)}
@@ -83,6 +113,9 @@ export async function renderExercises(context) {
               )
               .join("")}
           </div>
+          <div class="empty exercise-search-empty" id="exercise-search-empty" hidden>
+            Aucun exercice ne correspond à cette recherche.
+          </div>
         `
         : empty("Ajoute ton premier exercice.")
     }
@@ -91,6 +124,24 @@ export async function renderExercises(context) {
   document.querySelector("#new-exercise").onclick = () => {
     exerciseModal({}, context.rerender);
   };
+
+  const searchInput = document.querySelector("#exercise-search");
+  if (searchInput) {
+    searchInput.oninput = () => {
+      const query = normalizeSearch(searchInput.value);
+      let visible = 0;
+
+      app.querySelectorAll("[data-exercise-item]").forEach((item) => {
+        const matches = !query || item.dataset.search.includes(query);
+        item.hidden = !matches;
+        if (matches) visible += 1;
+      });
+
+      document.querySelector("#exercise-search-count").textContent =
+        `${visible} résultat${visible !== 1 ? "s" : ""}`;
+      document.querySelector("#exercise-search-empty").hidden = visible !== 0;
+    };
+  }
 
   app.querySelectorAll("[data-edit-exercise]").forEach((button) => {
     button.onclick = () => {

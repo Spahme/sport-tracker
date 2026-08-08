@@ -133,6 +133,33 @@ function sync_missed_training_days(PDO $pdo, array $program): void
     }
 }
 
+function ensure_unplanned_sessions_schema(PDO $pdo): void
+{
+    $columnExists = static function () use ($pdo): bool {
+        return (bool) $pdo
+            ->query("SHOW COLUMNS FROM workout_sessions LIKE 'is_unplanned'")
+            ->fetch();
+    };
+
+    if ($columnExists()) {
+        return;
+    }
+
+    try {
+        $pdo->exec("ALTER TABLE workout_sessions ADD COLUMN is_unplanned TINYINT(1) NOT NULL DEFAULT 0 AFTER pain_level");
+    } catch (Throwable $e) {
+        // Une autre requête a pu terminer la migration entre les deux contrôles.
+        if ($columnExists()) {
+            return;
+        }
+
+        json_err(
+            'Mise à jour de la base nécessaire. Importe database/migrations/2026-08-08-unplanned-sessions.sql dans phpMyAdmin OVH.',
+            503
+        );
+    }
+}
+
 try {
     $pdo = db();
 } catch (Throwable $e) {
@@ -411,6 +438,7 @@ if ($r === 'workout-sessions') {
     }
     $in = read_json();
     if ($method === 'POST' && $id === null) {
+        ensure_unplanned_sessions_schema($pdo);
         $templateId = null_int($in['workout_template_id'] ?? null);
         if (!$templateId) {
             json_err('workout_template_id requis', 422);
@@ -454,6 +482,7 @@ if ($r === 'workout-sessions') {
         }
     }
     if ($method === 'POST' && $id && $sub === 'complete') {
+        ensure_unplanned_sessions_schema($pdo);
         exists($pdo, 'workout_sessions', $id);
         $s = $pdo->prepare("UPDATE workout_sessions SET status='completed',ended_at=NOW(),duration_seconds=TIMESTAMPDIFF(SECOND,started_at,NOW()),notes=:n,energy_level=:e,fatigue_level=:f,motivation_level=:m,pain_level=:p WHERE id=:id");
         $s->execute([':id' => $id, ':n' => null_str($in['notes'] ?? null), ':e' => null_int($in['energy_level'] ?? null), ':f' => null_int($in['fatigue_level'] ?? null), ':m' => null_int($in['motivation_level'] ?? null), ':p' => null_int($in['pain_level'] ?? null)]);
