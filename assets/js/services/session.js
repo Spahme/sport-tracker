@@ -2,12 +2,13 @@ import { api } from "./api.js";
 import { state } from "../state.js";
 import { toast } from "../components/toast.js";
 
-export async function createSession(templateId, date) {
+export async function createSession(templateId, date, isUnplanned = false) {
   const { id } = await api("workout-sessions", {
     method: "POST",
     body: JSON.stringify({
       workout_template_id: templateId,
       scheduled_date: date,
+      is_unplanned: isUnplanned,
     }),
   });
 

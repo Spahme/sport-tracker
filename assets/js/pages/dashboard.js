@@ -1,9 +1,10 @@
 import { api } from "../services/api.js";
-import { fmtDuration, fmtDate } from "../utils/format.js";
+import { fmtDuration, fmtDate, localToday } from "../utils/format.js";
 import { esc, empty, loading } from "../utils/html.js";
 import { setTitle } from "../components/page-header.js";
 import { glossaryTerm } from "../utils/glossary.js";
 import { dayCard, bindDayActions } from "../components/day-card.js";
+import { unplannedSessionModal } from "../components/unplanned-session-modal.js";
 
 const app = document.querySelector("#app");
 
@@ -16,7 +17,7 @@ export async function renderDashboard(context) {
     api("current-week"),
   ]);
 
-  const today = new Date().toISOString().slice(0, 10);
+  const today = localToday();
   const day = week.days?.find((item) => item.date === today);
 
   app.innerHTML = `
@@ -51,13 +52,10 @@ export async function renderDashboard(context) {
     <div class="section-head">
       <h2>Aujourd’hui</h2>
 
-      <button
-        class="button secondary"
-        type="button"
-        id="show-week"
-      >
-        Voir la semaine
-      </button>
+      <div class="actions">
+        <button class="button" type="button" id="unplanned-session">Séance imprévue</button>
+        <button class="button secondary" type="button" id="show-week">Voir la semaine</button>
+      </div>
     </div>
 
     ${
@@ -88,6 +86,9 @@ export async function renderDashboard(context) {
   `;
 
   document.querySelector("#show-week").onclick = () => context.go("week");
+  document.querySelector("#unplanned-session").onclick = () => {
+    unplannedSessionModal(() => context.go("session"));
+  };
 
   bindDayActions(app, context);
 }

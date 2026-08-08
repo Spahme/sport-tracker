@@ -8,6 +8,7 @@ import {
   duplicateWorkout,
 } from "../components/workout-builder.js";
 import { bindDayActions } from "../components/day-card.js";
+import { localToday } from "../utils/format.js";
 
 const app = document.querySelector("#app");
 
@@ -77,7 +78,8 @@ export async function renderWorkouts(context) {
                         class="button small"
                         type="button"
                         data-start="${workout.id}"
-                        data-date="${new Date().toISOString().slice(0, 10)}"
+                        data-date="${localToday()}"
+                        data-unplanned="true"
                       >
                         Lancer
                       </button>

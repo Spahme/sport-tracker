@@ -136,7 +136,7 @@ export async function renderSession(context) {
   app.innerHTML = `
     <div class="section-head">
       <div>
-        <h2>${esc(session.template_name_snapshot)}</h2>
+        <h2>${esc(session.template_name_snapshot)} ${session.is_unplanned ? '<span class="status unplanned">Imprévue</span>' : ""}</h2>
 
         <div class="muted">
           Commencée le ${fmtDate(session.scheduled_date)}

@@ -98,6 +98,41 @@ function iso_week_bounds(?string $date = null): array
     return [$m, $m->modify('+6 days')];
 }
 
+function sync_missed_training_days(PDO $pdo, array $program): void
+{
+    $start = new DateTimeImmutable($program['started_at'] ?: 'today');
+    $today = new DateTimeImmutable('today');
+    $end = $today->modify('-1 day');
+
+    if (!empty($program['ended_at'])) {
+        $programEnd = new DateTimeImmutable($program['ended_at']);
+        if ($programEnd < $end) {
+            $end = $programEnd;
+        }
+    }
+    if ($start > $end) {
+        return;
+    }
+
+    $schedule = $pdo->prepare("SELECT d.id,d.day_of_week FROM weekly_schedule_days d WHERE d.training_program_id=:p AND d.is_rest_day=0 AND EXISTS(SELECT 1 FROM weekly_schedule_options o WHERE o.weekly_schedule_day_id=d.id)");
+    $schedule->execute([':p' => $program['id']]);
+    $byWeekday = [];
+    foreach ($schedule->fetchAll() as $day) {
+        $byWeekday[(int) $day['day_of_week']] = (int) $day['id'];
+    }
+    if (!$byWeekday) {
+        return;
+    }
+
+    $insert = $pdo->prepare("INSERT IGNORE INTO weekly_day_statuses(training_program_id,weekly_schedule_day_id,scheduled_date,status) VALUES(:p,:day,:date,'missed')");
+    for ($date = $start; $date <= $end; $date = $date->modify('+1 day')) {
+        $weekday = (int) $date->format('N');
+        if (isset($byWeekday[$weekday])) {
+            $insert->execute([':p' => $program['id'], ':day' => $byWeekday[$weekday], ':date' => $date->format('Y-m-d')]);
+        }
+    }
+}
+
 try {
     $pdo = db();
 } catch (Throwable $e) {
@@ -328,6 +363,7 @@ if ($r === 'current-week' && $method === 'GET') {
     if (!$p) {
         json_ok(['program' => null, 'days' => []]);
     }
+    sync_missed_training_days($pdo, $p);
     [$start,$end] = iso_week_bounds($_GET['date'] ?? null);
     $s = $pdo->prepare('SELECT * FROM weekly_schedule_days WHERE training_program_id=:id');
     $s->execute([':id' => $p['id']]);
@@ -379,7 +415,22 @@ if ($r === 'workout-sessions') {
         if (!$templateId) {
             json_err('workout_template_id requis', 422);
         }$scheduled = null_str($in['scheduled_date'] ?? date('Y-m-d'), 10);
+        $scheduledDate = DateTimeImmutable::createFromFormat('!Y-m-d', (string) $scheduled);
+        if (!$scheduledDate || $scheduledDate->format('Y-m-d') !== $scheduled) {
+            json_err('Date de séance invalide', 422);
+        }
+        if ($scheduledDate < new DateTimeImmutable('today')) {
+            json_err('Impossible de démarrer une séance à une date passée', 409);
+        }
+        $isUnplanned = bool_val($in['is_unplanned'] ?? false);
         $program = $pdo->query('SELECT id FROM training_programs WHERE is_active=1 LIMIT 1')->fetchColumn() ?: null;
+        if (!$isUnplanned && $program) {
+            $planned = $pdo->prepare('SELECT 1 FROM weekly_schedule_days d JOIN weekly_schedule_options o ON o.weekly_schedule_day_id=d.id WHERE d.training_program_id=:p AND d.day_of_week=WEEKDAY(:date)+1 AND d.is_rest_day=0 AND o.workout_template_id=:template LIMIT 1');
+            $planned->execute([':p' => $program, ':date' => $scheduled, ':template' => $templateId]);
+            $isUnplanned = $planned->fetchColumn() ? 0 : 1;
+        } elseif (!$program) {
+            $isUnplanned = 1;
+        }
         $s = $pdo->prepare('SELECT * FROM workout_templates WHERE id=:id');
         $s->execute([':id' => $templateId]);
         $t = $s->fetch();
@@ -387,8 +438,8 @@ if ($r === 'workout-sessions') {
             json_err('Séance type introuvable', 404);
         }$pdo->beginTransaction();
         try {
-            $s = $pdo->prepare('INSERT INTO workout_sessions(workout_template_id,training_program_id,template_name_snapshot,scheduled_date,started_at) VALUES(:w,:p,:n,:d,NOW())');
-            $s->execute([':w' => $templateId, ':p' => $program, ':n' => $t['name'], ':d' => $scheduled]);
+            $s = $pdo->prepare('INSERT INTO workout_sessions(workout_template_id,training_program_id,template_name_snapshot,scheduled_date,started_at,is_unplanned) VALUES(:w,:p,:n,:d,NOW(),:u)');
+            $s->execute([':w' => $templateId, ':p' => $program, ':n' => $t['name'], ':d' => $scheduled, ':u' => $isUnplanned]);
             $sid = (int) $pdo->lastInsertId();
             $src = $pdo->prepare('SELECT wte.*,e.name FROM workout_template_exercises wte JOIN exercises e ON e.id=wte.exercise_id WHERE workout_template_id=:id ORDER BY position');
             $src->execute([':id' => $templateId]);
@@ -406,10 +457,10 @@ if ($r === 'workout-sessions') {
         exists($pdo, 'workout_sessions', $id);
         $s = $pdo->prepare("UPDATE workout_sessions SET status='completed',ended_at=NOW(),duration_seconds=TIMESTAMPDIFF(SECOND,started_at,NOW()),notes=:n,energy_level=:e,fatigue_level=:f,motivation_level=:m,pain_level=:p WHERE id=:id");
         $s->execute([':id' => $id, ':n' => null_str($in['notes'] ?? null), ':e' => null_int($in['energy_level'] ?? null), ':f' => null_int($in['fatigue_level'] ?? null), ':m' => null_int($in['motivation_level'] ?? null), ':p' => null_int($in['pain_level'] ?? null)]);
-        $ss = $pdo->prepare('SELECT training_program_id,workout_template_id,scheduled_date FROM workout_sessions WHERE id=:id');
+        $ss = $pdo->prepare('SELECT training_program_id,workout_template_id,scheduled_date,is_unplanned FROM workout_sessions WHERE id=:id');
         $ss->execute([':id' => $id]);
         $x = $ss->fetch();
-        if ($x['training_program_id'] && $x['scheduled_date']) {
+        if ($x['training_program_id'] && $x['scheduled_date'] && !$x['is_unplanned']) {
             $d = $pdo->prepare('SELECT id FROM weekly_schedule_days WHERE training_program_id=:p AND day_of_week=WEEKDAY(:date)+1');
             $d->execute([':p' => $x['training_program_id'], ':date' => $x['scheduled_date']]);
             $dayId = $d->fetchColumn() ?: null;
@@ -483,6 +534,10 @@ if (
     && ($parts[1] ?? '') === 'dashboard'
     && $method === 'GET'
 ) {
+    $activeProgram = $pdo->query('SELECT * FROM training_programs WHERE is_active=1 LIMIT 1')->fetch();
+    if ($activeProgram) {
+        sync_missed_training_days($pdo, $activeProgram);
+    }
     [$start, $end] = iso_week_bounds();
 
     $stmt = $pdo->prepare(

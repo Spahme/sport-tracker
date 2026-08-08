@@ -3,6 +3,7 @@ import { fmtDate } from "../utils/format.js";
 import { esc, empty, loading } from "../utils/html.js";
 import { setTitle } from "../components/page-header.js";
 import { dayCard, bindDayActions } from "../components/day-card.js";
+import { unplannedSessionModal } from "../components/unplanned-session-modal.js";
 
 const app = document.querySelector("#app");
 
@@ -26,13 +27,10 @@ export async function renderWeek(context) {
         </div>
       </div>
 
-      <button
-        class="button secondary"
-        type="button"
-        id="configure-program"
-      >
-        Configurer
-      </button>
+      <div class="actions">
+        <button class="button" type="button" id="unplanned-session">Séance imprévue</button>
+        <button class="button secondary" type="button" id="configure-program">Configurer</button>
+      </div>
     </div>
 
     ${
@@ -48,6 +46,10 @@ export async function renderWeek(context) {
 
   document.querySelector("#configure-program").onclick = () => {
     context.go("programs");
+  };
+
+  document.querySelector("#unplanned-session").onclick = () => {
+    unplannedSessionModal(() => context.go("session"));
   };
 
   bindDayActions(app, context);

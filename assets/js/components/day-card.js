@@ -1,6 +1,6 @@
 import { api } from "../services/api.js";
 import { createSession } from "../services/session.js";
-import { fmtDate } from "../utils/format.js";
+import { fmtDate, localToday } from "../utils/format.js";
 import { esc } from "../utils/html.js";
 import { toast } from "./toast.js";
 
@@ -18,7 +18,8 @@ export function statusLabel(status) {
 
 export function dayCard(day, single = false) {
   const status = day.status?.status;
-  const today = new Date().toISOString().slice(0, 10);
+  const today = localToday();
+  const isPast = day.date < today;
 
   return `
     <div
@@ -72,8 +73,9 @@ export function dayCard(day, single = false) {
                         type="button"
                         data-start="${option.workout_template_id}"
                         data-date="${day.date}"
+                        ${isPast ? 'disabled title="Une séance passée ne peut pas être démarrée"' : ""}
                       >
-                        Commencer
+                        ${isPast ? "Date passée" : "Commencer"}
                       </button>
                     </div>
                   `,
@@ -114,10 +116,15 @@ export function dayCard(day, single = false) {
 export function bindDayActions(root, { go, rerender }) {
   root.querySelectorAll("[data-start]").forEach((button) => {
     button.onclick = async () => {
+      if (button.dataset.date < localToday()) {
+        toast("Impossible de démarrer une séance passée");
+        return;
+      }
       try {
         await createSession(
           Number(button.dataset.start),
           button.dataset.date,
+          button.dataset.unplanned === "true",
         );
 
         go("session");

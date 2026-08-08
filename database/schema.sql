@@ -120,6 +120,7 @@ CREATE TABLE workout_sessions (
     fatigue_level TINYINT UNSIGNED NULL,
     motivation_level TINYINT UNSIGNED NULL,
     pain_level TINYINT UNSIGNED NULL,
+    is_unplanned TINYINT(1) NOT NULL DEFAULT 0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     CONSTRAINT fk_session_template FOREIGN KEY (workout_template_id) REFERENCES workout_templates(id) ON DELETE SET NULL,

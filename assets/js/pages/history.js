@@ -37,6 +37,7 @@ export async function renderHistory() {
                           session.template_name_snapshot ||
                             "Séance libre",
                         )}
+                        ${session.is_unplanned ? '<span class="status unplanned">Imprévue</span>' : ""}
                       </div>
 
                       <div class="list-meta">
