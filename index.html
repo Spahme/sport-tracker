@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#111827">
+  <title>Sport Tracker</title>
+  <link rel="stylesheet" href="assets/css/app.css">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <span class="brand-mark">ST</span>
+        <span>Sport Tracker</span>
+      </div>
+
+      <nav class="nav" id="desktop-nav"></nav>
+
+      <div class="sidebar-note">
+        Application personnelle<br>
+        <small>Données locales dans ta base</small>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow" id="page-kicker">Suivi sportif</p>
+          <h1 id="page-title">Tableau de bord</h1>
+        </div>
+
+        <button
+          class="icon-button"
+          id="theme-toggle"
+          type="button"
+          aria-label="Changer le thème"
+        >
+          ◐
+        </button>
+      </header>
+
+      <section id="app" class="content" aria-live="polite"></section>
+    </main>
+  </div>
+
+  <nav class="mobile-nav" id="mobile-nav"></nav>
+
+  <div id="modal-root"></div>
+  <div id="toast-root" class="toast-root"></div>
+
+  <script type="module" src="assets/js/app.js"></script>
+</body>
+</html>

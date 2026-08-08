@@ -1,0 +1,71 @@
+# =========================
+# CONFIGURATION LOCALE
+# =========================
+
+config.php
+/config.php
+api/config.php
+/api/config.php
+
+.env
+.env.*
+!.env.example
+
+# =========================
+# DÉPENDANCES
+# =========================
+
+vendor/
+node_modules/
+
+# =========================
+# IDE / ÉDITEURS
+# =========================
+
+.vscode/
+.idea/
+
+*.code-workspace
+
+# =========================
+# SYSTÈME
+# =========================
+
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# =========================
+# LOGS / TEMP
+# =========================
+
+*.log
+logs/
+tmp/
+temp/
+.cache/
+
+# =========================
+# FICHIERS DE BACKUP
+# =========================
+
+*.bak
+*.backup
+*.old
+*.swp
+*~
+
+# =========================
+# BUILD
+# =========================
+
+dist/
+build/
+
+# =========================
+# FICHIERS UPLOADÉS
+# si ton application en génère
+# =========================
+
+uploads/*
+!uploads/.gitkeep
