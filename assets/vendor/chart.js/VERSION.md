@@ -2,7 +2,6 @@
 
 - Package officiel : `chart.js@4.5.1`
 - Fichier utilisé : `dist/chart.umd.min.js`
-- Intégrité du paquet npm : `sha512-GIjfiT9dbmHRi[...]CNWqlq5+E8/Pw==`
 - Licence : MIT, voir `LICENSE.md`.
 
 Le bundle UMD est chargé directement par `index.html`. Aucun gestionnaire de paquets ni processus Node.js n’est nécessaire sur le serveur.

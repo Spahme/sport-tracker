@@ -468,6 +468,28 @@ if ($r === 'workout-sessions') {
             $up->execute([':p' => $x['training_program_id'], ':d' => $dayId, ':s' => $id, ':w' => $x['workout_template_id'], ':date' => $x['scheduled_date']]);
         }json_ok(['id' => $id]);
     }
+    if ($method === 'POST' && $id && $sub === 'stop') {
+        exists($pdo, 'workout_sessions', $id);
+        $s = $pdo->prepare("UPDATE workout_sessions SET status='abandoned',ended_at=NOW(),duration_seconds=TIMESTAMPDIFF(SECOND,started_at,NOW()) WHERE id=:id AND status='in_progress'");
+        $s->execute([':id' => $id]);
+        if ($s->rowCount() === 0) {
+            json_err('Seule une séance en cours peut être stoppée', 409);
+        }
+        json_ok(['id' => $id, 'status' => 'abandoned']);
+    }
+    if ($method === 'DELETE' && $id && $sub === null) {
+        exists($pdo, 'workout_sessions', $id);
+        $pdo->beginTransaction();
+        try {
+            $pdo->prepare('DELETE FROM weekly_day_statuses WHERE workout_session_id=:id')->execute([':id' => $id]);
+            $pdo->prepare('DELETE FROM workout_sessions WHERE id=:id')->execute([':id' => $id]);
+            $pdo->commit();
+            json_ok(['id' => $id]);
+        } catch (Throwable $e) {
+            $pdo->rollBack();
+            json_err('Erreur lors de la suppression de la séance', 500, $e->getMessage());
+        }
+    }
     json_err('Route workout-sessions non trouvée', 404);
 }
 

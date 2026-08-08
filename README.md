@@ -58,6 +58,8 @@ Chart.js 4.5.1 est fourni localement dans `assets/vendor/chart.js`. L’applicat
 
 Le dossier `assets/vendor/chart.js` doit être transféré avec les autres fichiers. Il n’est pas nécessaire d’exécuter `npm install` sur OVH.
 
+Après le transfert, l’URL `assets/vendor/chart.js/chart.umd.min.js` doit répondre avec le fichier JavaScript et non avec une erreur 404. Un CDN de secours est configuré, mais le fichier local reste la source principale.
+
 Exemple de configuration :
 
 ```php
