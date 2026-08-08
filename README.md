@@ -44,7 +44,7 @@ Le bouton « Lancer » de la page « Séances types » crée également une séa
 - extension PHP PDO MySQL ;
 - HTTPS recommandé.
 
-Chart.js est chargé depuis jsDelivr. Le navigateur doit pouvoir accéder à ce CDN.
+Chart.js 4.5.1 est fourni localement dans `assets/vendor/chart.js`. L’application n’utilise donc aucun CDN pour afficher les graphiques et continue de fonctionner si le serveur ou le navigateur n’a pas accès à jsDelivr.
 
 ## Nouvelle installation sur OVH
 
@@ -55,6 +55,8 @@ Chart.js est chargé depuis jsDelivr. Le navigateur doit pouvoir accéder à ce 
 5. Transférer tous les fichiers dans le répertoire web, généralement `www`.
 6. Vérifier que `.htaccess` a bien été transféré.
 7. Ouvrir le domaine ou sous-domaine associé.
+
+Le dossier `assets/vendor/chart.js` doit être transféré avec les autres fichiers. Il n’est pas nécessaire d’exécuter `npm install` sur OVH.
 
 Exemple de configuration :
 
@@ -95,6 +97,7 @@ assets/css/          styles
 assets/js/           pages, composants et services JavaScript
 database/schema.sql  schéma complet d’une nouvelle installation
 database/migrations/ migrations des installations existantes
+assets/vendor/        bibliothèques JavaScript distribuées avec l’application
 index.html           point d’entrée
 .htaccess            réécriture des routes API
 ```
@@ -104,3 +107,13 @@ index.html           point d’entrée
 Les données sportives sont stockées dans MySQL. Effectue régulièrement une sauvegarde depuis phpMyAdmin ou l’espace client OVH, notamment avant une migration.
 
 Modifier un programme ou une séance type ne supprime pas les performances existantes : les informations utiles sont copiées dans chaque séance lors de son démarrage.
+
+## Mettre à jour Chart.js
+
+La version est figée volontairement pour garantir un déploiement reproductible. Pour la mettre à jour depuis une machine de développement :
+
+1. vérifier la dernière version avec `npm view chart.js version` ;
+2. télécharger le paquet officiel avec `npm pack chart.js@VERSION` ;
+3. remplacer `assets/vendor/chart.js/chart.umd.min.js` par `dist/chart.umd.min.js` provenant du paquet ;
+4. remplacer également `LICENSE.md` et mettre à jour `VERSION.md` ;
+5. vérifier les graphiques avant le déploiement.

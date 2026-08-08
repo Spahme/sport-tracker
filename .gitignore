@@ -18,6 +18,13 @@ api/config.php
 vendor/
 node_modules/
 
+# Chart.js est une dépendance navigateur livrée avec l'application.
+!assets/vendor/
+!assets/vendor/chart.js/
+!assets/vendor/chart.js/chart.umd.min.js
+!assets/vendor/chart.js/LICENSE.md
+!assets/vendor/chart.js/VERSION.md
+
 # =========================
 # IDE / ÉDITEURS
 # =========================
