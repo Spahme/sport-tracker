@@ -2,6 +2,7 @@ import { api } from "../services/api.js";
 import { fmtDuration, fmtDate } from "../utils/format.js";
 import { esc, empty, loading } from "../utils/html.js";
 import { setTitle } from "../components/page-header.js";
+import { glossaryTerm } from "../utils/glossary.js";
 import { dayCard, bindDayActions } from "../components/day-card.js";
 
 const app = document.querySelector("#app");
@@ -26,7 +27,7 @@ export async function renderDashboard(context) {
       </div>
 
       <div class="card">
-        <div class="muted">Volume hebdomadaire</div>
+        <div class="muted">${glossaryTerm("Volume hebdomadaire", "volume")}</div>
         <div class="metric">
           ${Math.round(stats.week.volume || 0).toLocaleString("fr-FR")} kg
         </div>

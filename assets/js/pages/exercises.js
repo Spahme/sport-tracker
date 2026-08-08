@@ -4,6 +4,7 @@ import { esc, empty, loading } from "../utils/html.js";
 import { setTitle } from "../components/page-header.js";
 import { exerciseModal } from "../components/exercise-modal.js";
 import { recordsModal } from "../components/records-modal.js";
+import { exerciseTrackingModal } from "../components/exercise-tracking-modal.js";
 
 const app = document.querySelector("#app");
 
@@ -56,6 +57,14 @@ export async function renderExercises(context) {
                       <button
                         class="button secondary small"
                         type="button"
+                        data-tracking="${exercise.id}"
+                      >
+                        Tracking
+                      </button>
+
+                      <button
+                        class="button ghost small"
+                        type="button"
                         data-records="${exercise.id}"
                       >
                         Records
@@ -96,6 +105,12 @@ export async function renderExercises(context) {
   app.querySelectorAll("[data-records]").forEach((button) => {
     button.onclick = () => {
       recordsModal(Number(button.dataset.records));
+    };
+  });
+
+  app.querySelectorAll("[data-tracking]").forEach((button) => {
+    button.onclick = () => {
+      exerciseTrackingModal(Number(button.dataset.tracking));
     };
   });
 }

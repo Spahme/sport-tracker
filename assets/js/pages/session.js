@@ -9,9 +9,11 @@ import { fmtDate } from "../utils/format.js";
 import { esc, loading } from "../utils/html.js";
 import { setTitle } from "../components/page-header.js";
 import { recordsModal } from "../components/records-modal.js";
+import { exerciseTrackingModal } from "../components/exercise-tracking-modal.js";
 import { addSetModal } from "../components/set-modal.js";
 import { completeSessionModal } from "../components/complete-session-modal.js";
 import { toast } from "../components/toast.js";
+import { glossaryTerm } from "../utils/glossary.js";
 
 const app = document.querySelector("#app");
 
@@ -27,17 +29,17 @@ function setRow(set) {
 
       <div>
         <strong>${set.repetitions ?? "—"}</strong>
-        <div class="list-meta">reps</div>
+        <div class="list-meta">${glossaryTerm("reps", "reps")}</div>
       </div>
 
       <div class="optional-mobile">
         <strong>${set.rir ?? "—"}</strong>
-        <div class="list-meta">RIR</div>
+        <div class="list-meta">${glossaryTerm("RIR", "rir")}</div>
       </div>
 
       <div class="optional-mobile">
         <strong>${set.rpe ?? "—"}</strong>
-        <div class="list-meta">RPE</div>
+        <div class="list-meta">${glossaryTerm("RPE", "rpe")}</div>
       </div>
 
       <button
@@ -79,6 +81,14 @@ function sessionExercise(exercise) {
         <div class="actions">
           <button
             class="button secondary small"
+            type="button"
+            data-exercise-tracking="${exercise.exercise_id}"
+          >
+            Tracking
+          </button>
+
+          <button
+            class="button ghost small"
             type="button"
             data-records="${exercise.exercise_id}"
           >
@@ -165,6 +175,12 @@ export async function renderSession(context) {
   app.querySelectorAll("[data-records]").forEach((button) => {
     button.onclick = () => {
       recordsModal(Number(button.dataset.records));
+    };
+  });
+
+  app.querySelectorAll("[data-exercise-tracking]").forEach((button) => {
+    button.onclick = () => {
+      exerciseTrackingModal(Number(button.dataset.exerciseTracking));
     };
   });
 

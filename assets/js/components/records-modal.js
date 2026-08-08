@@ -3,6 +3,7 @@ import { state } from "../state.js";
 import { modal } from "./modal.js";
 import { fmtDate } from "../utils/format.js";
 import { empty, esc } from "../utils/html.js";
+import { glossaryTerm } from "../utils/glossary.js";
 
 function record(label, data, value) {
   return `
@@ -47,7 +48,7 @@ export async function recordsModal(id) {
         )}
 
         ${record(
-          "Meilleur volume / série",
+          glossaryTerm("Meilleur volume / série", "volume"),
           records.best_set_volume,
           records.best_set_volume
             ? `${Math.round(records.best_set_volume.value)} kg`
@@ -55,7 +56,7 @@ export async function recordsModal(id) {
         )}
 
         ${record(
-          "1RM estimé",
+          glossaryTerm("1RM estimé", "oneRm"),
           records.best_estimated_one_rep_max,
           records.best_estimated_one_rep_max
             ? `${Number(records.best_estimated_one_rep_max.value).toFixed(1)} kg`

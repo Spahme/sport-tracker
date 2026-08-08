@@ -177,7 +177,8 @@ if ($r === 'exercises') {
         } json_ok(['exercise_id' => $id, 'records' => $out]);
     }
     if ($method === 'GET' && $id && $sub === 'history') {
-        $s = $pdo->prepare("SELECT s.id session_id,s.scheduled_date,s.template_name_snapshot,ws.weight,ws.repetitions,ws.rir,ws.rpe FROM workout_sets ws JOIN workout_session_exercises wse ON wse.id=ws.workout_session_exercise_id JOIN workout_sessions s ON s.id=wse.workout_session_id WHERE wse.exercise_id=:id AND s.status='completed' ORDER BY s.scheduled_date DESC,ws.set_number");
+        exists($pdo, 'exercises', $id);
+        $s = $pdo->prepare("SELECT s.id session_id,s.scheduled_date,s.started_at,s.template_name_snapshot,ws.id set_id,ws.set_number,ws.weight,ws.repetitions,ws.rir,ws.rpe,ws.completed_at FROM workout_sets ws JOIN workout_session_exercises wse ON wse.id=ws.workout_session_exercise_id JOIN workout_sessions s ON s.id=wse.workout_session_id WHERE wse.exercise_id=:id AND ws.is_completed=1 AND s.status='completed' ORDER BY COALESCE(s.scheduled_date,DATE(s.started_at)) DESC,s.started_at DESC,ws.set_number ASC LIMIT 500");
         $s->execute([':id' => $id]);
         json_ok($s->fetchAll());
     }

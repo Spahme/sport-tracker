@@ -2,6 +2,7 @@ import { api } from "../services/api.js";
 import { formData, numOrNull } from "../utils/form.js";
 import { modal, closeModal } from "./modal.js";
 import { toast } from "./toast.js";
+import { glossaryTerm } from "../utils/glossary.js";
 
 export function addSetModal(sessionExerciseId, onSaved = null) {
 	modal(
@@ -19,12 +20,12 @@ export function addSetModal(sessionExerciseId, onSaved = null) {
         </div>
 
         <div class="field">
-          <label>RIR</label>
+          <label>${glossaryTerm("RIR", "rir")}</label>
           <input class="input" inputmode="decimal" name="rir">
         </div>
 
         <div class="field">
-          <label>RPE</label>
+          <label>${glossaryTerm("RPE", "rpe")}</label>
           <input class="input" inputmode="decimal" name="rpe">
         </div>
 
